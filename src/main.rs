@@ -187,7 +187,7 @@ async fn main() -> io::Result<()> {
         None
     };
 
-    println!("Output Filename is: {:?}", cli.output);
+    println!("\nOutput Filename is: {:?}\n", cli.output);
 
     let mut webhook_var = if !cli.nosend {
         Some(String::new())
