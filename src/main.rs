@@ -229,10 +229,10 @@ fn main() -> std::io::Result<()> {
             match auth_type.as_str() {
                 "open" => {
                     let output_string_open = format!(
-                        "Wi-Fi Name: {}, No password",
+                        "Wi-Fi Name: {}, No password\n",
                         profile_name.to_string_lossy().to_string()
                     );
-                    println!("{}", output_string_open);
+                    print!("{}", output_string_open);
                     file.write_all(output_string_open.as_bytes())?;
                 }
                 "WPA2" | "WPA2PSK" | "WPA3SAE" => {
@@ -240,22 +240,22 @@ fn main() -> std::io::Result<()> {
                         traverse_xml_tree(&root, &["MSM", "security", "sharedKey", "keyMaterial"])
                     {
                         let output_string_wpa2_wpa3 = format!(
-                            "Wi-Fi Name: {}, Authentication: {}, Password: {}",
+                            "Wi-Fi Name: {}, Authentication: {}, Password: {}\n",
                             profile_name.to_string_lossy().to_string(),
                             auth_type,
                             password
                         );
-                        println!("{}", output_string_wpa2_wpa3);
+                        print!("{}", output_string_wpa2_wpa3);
                         file.write_all(output_string_wpa2_wpa3.as_bytes())?;
                     }
                 }
                 _ => {
                     let output_string_other = format!(
-                        "Wi-Fi Name: {}, Authenticaion {}",
+                        "Wi-Fi Name: {}, Authenticaion {}\n",
                         profile_name.to_string_lossy().to_string(),
                         auth_type
                     );
-                    println!("{}", output_string_other);
+                    print!("{}", output_string_other);
                     file.write_all(output_string_other.as_bytes())?;
                 }
             }
