@@ -1,6 +1,16 @@
-use std::env;
+use clap::Parser;
 use std::fs::File;
+use std::io;
 use std::io::Write;
+//use std::env;
+
+#[derive(Parser)]
+#[command(version, about, long_about = None)]
+struct Cli {
+    /// Name of output file to save WiFi creds
+    #[arg(short, long)]
+    output: Option<String>,
+}
 
 use std::{ffi::OsString, os::windows::ffi::OsStringExt};
 
@@ -134,18 +144,16 @@ fn get_profiles_xml(
     Ok(xml_string.to_os_string())
 }
 
-fn main() -> std::io::Result<()> {
-    let mut args = env::args().skip(1);
-    let output_file_name = args.next();
+fn main() -> io::Result<()> {
+    let cli = Cli::parse();
 
-    let mut file = output_file_name
-        .as_ref()
-        .map(|filename| File::create(filename))
-        .transpose()?;
+    let mut file = if let Some(ref output) = cli.output {
+        Some(File::create(output)?)
+    } else {
+        None
+    };
 
-    if let Some(ref mut _file) = file {
-        println!("File Created successfully");
-    }
+    println!("Output Filename is: {:?}", cli.output);
 
     let wlan_handle = open_wlan_handle(WLAN_API_VERSION_2_0).expect("Failed to open WLAN handle!");
 
@@ -265,7 +273,7 @@ fn main() -> std::io::Result<()> {
                 }
                 _ => {
                     let output_string_other = format!(
-                        "Wi-Fi Name: {}, Authenticaion {}\n",
+                        "Wi-Fi Name: {}, Authentication: {}\n",
                         profile_name.to_string_lossy().to_string(),
                         auth_type
                     );
