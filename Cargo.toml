@@ -1,6 +1,6 @@
 [package]
 name = "wifipassdump"
-version = "0.1.0"
+version = "0.2.0"
 description = "Extracts saved WiFI creds from Windows"
 edition = "2021"
 
