@@ -5,12 +5,17 @@ description = "Extracts saved WiFI creds from Windows"
 edition = "2021"
 
 [dependencies]
-clap = { version = "4.5.4", features = ["derive"] }
+base64 = "0.22.1"
+clap = { version = "4.5.8", features = ["derive"] }
+reqwest = { version = "0.12.5", features = ["json"] }
+serde = { version = "1.0.203", features = ["derive"] }
+serde_json = "1.0.120"
+tokio = { version = "1.38.0", features = ["full"] }
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies.windows]
-version = "0.56.0"
+version = "0.57.0"
 
 features = [
     "Data_Xml_Dom",

