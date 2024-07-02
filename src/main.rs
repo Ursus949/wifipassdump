@@ -1,5 +1,6 @@
+use std::env;
 use std::fs::File;
-use std::io::prelude::*;
+use std::io::Write;
 
 use std::{ffi::OsString, os::windows::ffi::OsStringExt};
 
@@ -134,8 +135,17 @@ fn get_profiles_xml(
 }
 
 fn main() -> std::io::Result<()> {
-    let mut file = File::create("wifipasswords_plaintext.txt")?;
-    println!("File Created successfully");
+    let mut args = env::args().skip(1);
+    let output_file_name = args.next();
+
+    let mut file = output_file_name
+        .as_ref()
+        .map(|filename| File::create(filename))
+        .transpose()?;
+
+    if let Some(ref mut _file) = file {
+        println!("File Created successfully");
+    }
 
     let wlan_handle = open_wlan_handle(WLAN_API_VERSION_2_0).expect("Failed to open WLAN handle!");
 
@@ -233,7 +243,9 @@ fn main() -> std::io::Result<()> {
                         profile_name.to_string_lossy().to_string()
                     );
                     print!("{}", output_string_open);
-                    file.write_all(output_string_open.as_bytes())?;
+                    if let Some(ref mut file) = file {
+                        file.write_all(output_string_open.as_bytes())?;
+                    }
                 }
                 "WPA2" | "WPA2PSK" | "WPA3SAE" => {
                     if let Some(password) =
@@ -246,7 +258,9 @@ fn main() -> std::io::Result<()> {
                             password
                         );
                         print!("{}", output_string_wpa2_wpa3);
-                        file.write_all(output_string_wpa2_wpa3.as_bytes())?;
+                        if let Some(ref mut file) = file {
+                            file.write_all(output_string_wpa2_wpa3.as_bytes())?;
+                        }
                     }
                 }
                 _ => {
@@ -256,7 +270,9 @@ fn main() -> std::io::Result<()> {
                         auth_type
                     );
                     print!("{}", output_string_other);
-                    file.write_all(output_string_other.as_bytes())?;
+                    if let Some(ref mut file) = file {
+                        file.write_all(output_string_other.as_bytes())?;
+                    }
                 }
             }
         }
