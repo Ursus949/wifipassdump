@@ -127,8 +127,8 @@ fn traverse_xml_tree(xml: &XmlElement, node_path: &[&str]) -> Option<String> {
             };
 
             if element_name.to_os_string() == node_name {
-                if element_name.to_os_string().to_string_lossy().to_string()
-                    == last_node_name.to_string()
+                if element_name.to_os_string().to_string_lossy()
+                    == *last_node_name
                 {
                     return Some(subtree_value.InnerText().ok()?.to_string());
                 }

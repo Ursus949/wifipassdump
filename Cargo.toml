@@ -1,12 +1,12 @@
 [package]
 name = "wifipassdump"
-version = "0.2.0"
+version = "0.3.0"
 description = "Extracts saved WiFI creds from Windows"
 edition = "2021"
 
 [dependencies]
 anyhow = "1"
-base64 = "0.22.1"
+base64 = "0.23.1"
 clap = { version = "4.6.9", features = ["derive"] }
 reqwest = { version = "0.13", features = ["json"] }
 serde = { version = "1.0.229", features = ["derive"] }
