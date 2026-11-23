@@ -1,6 +1,6 @@
 #![cfg_attr(not(test), deny(clippy::unwrap_used, clippy::expect_used))]
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use base64::{engine::general_purpose, Engine as _};
 use clap::Parser;
 use std::fs::File;
@@ -166,13 +166,8 @@ fn get_profiles_xml(
         .ok()
         .context("Failed to get profile XML")?;
 
-    let xml_string = match unsafe { profile_xml_data.to_hstring() } {
-        Ok(data) => data,
-        Err(e) => {
-            unsafe { WlanFreeMemory(profile_xml_data.as_ptr().cast()) };
-            return Err(anyhow!(e).context("Failed to convert profile XML to HSTRING"));
-        }
-    };
+    let xml_string = unsafe { profile_xml_data.to_hstring() };
+    unsafe { WlanFreeMemory(profile_xml_data.as_ptr().cast()) };
 
     Ok(xml_string.to_os_string())
 }
